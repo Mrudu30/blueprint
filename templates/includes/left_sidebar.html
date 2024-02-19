@@ -1,0 +1,53 @@
+<!-- ========== Left Sidebar Start ========== -->
+<style>
+    #side-menu li a{
+        cursor: pointer;
+    }
+</style>
+<div class="left side-menu">
+
+    <div class="slimscroll-menu" id="remove-scroll">
+
+        <!-- LOGO -->
+        <div class=" d-block">
+            <img src="{{ url_for('static', filename='images/1.png') }}" alt="" height="200">
+        </div>
+
+        <!-- User box -->
+        <div class="user-box d-block">
+            <div class="user-img rounded-circle">
+                <img src="/static/profiles/{{pfp}}" alt="user-img" title="Mat Helme" class="rounded-circle img-fluid">
+            </div>
+            <h5><a href="{{homeurl}}">{{username}}</a> </h5>
+            <p class="text-muted capitalize-text">{{role}}</p>
+        </div>
+
+        <!--- Sidemenu -->
+        <div id="sidebar-menu">
+
+            <ul class="metismenu" id="side-menu">
+                <li>
+                    <a href="{{homeurl}}">
+                        <i class="fi-air-play"></i><span class="badge badge-danger badge-pill float-right"></span> <span> Dashboard </span>
+                    </a>
+                </li>
+                {% if role == 'admin' or role == 'hr' %}
+                <li>
+                    <a id="addBtn">
+                        <i class="fas fa-plus"></i><span class="badge badge-danger badge-pill float-right"></span>  Add Employee
+                    </a>
+                </li>
+                {% endif %}
+
+            </ul>
+
+        </div>
+        <!-- Sidebar -->
+
+        <div class="clearfix"></div>
+
+    </div>
+    <!-- Sidebar -left -->
+
+</div>
+<!-- Left Sidebar End -->

@@ -1,0 +1,13 @@
+.capitalize-text{
+    text-transform: capitalize;
+}
+
+.nav-link:hover{
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.center-label {
+    display: block;
+    text-align: center;
+}
