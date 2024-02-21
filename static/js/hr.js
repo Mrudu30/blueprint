@@ -36,6 +36,53 @@ $(document).ready(function () {
         $(".pfp").empty()
     })
 
+    // --------------- Duplicate Functions -----------------
+    function duplicate_username(usernameValue, role, callback) {
+        $.ajax({
+            type: "POST",
+            url: "/checkUsername",
+            data: { 'username': usernameValue, 'role': role },
+            success: function (response) {
+                if (response.status === 'success') {
+                    username_help.text("").removeClass("text-danger capitalize-text");
+                    $("#username").addClass('duplicate');
+                    callback(true);
+                } else {
+                    username_help.text("username already exists").addClass("text-danger capitalize-text");
+                    $("#username").removeClass('duplicate');
+                    callback(false);
+                }
+            },
+            error: function () {
+                console.error('Error in AJAX request');
+                callback(false);
+            }
+        });
+    }
+
+    function duplicate_email(emailValue, role, callback) {
+        $.ajax({
+            type: "POST",
+            url: "/checkEmail",
+            data: { 'email': emailValue, 'role': role },
+            success: function (response) {
+                if (response.status === 'success') {
+                    email_help.text("").removeClass("text-danger capitalize-text");
+                    $("#email").addClass('duplicate');
+                    callback(true);
+                } else {
+                    email_help.text("email already exists").addClass("text-danger capitalize-text");
+                    $("#email").removeClass('duplicate');
+                    callback(false);
+                }
+            },
+            error: function () {
+                console.error('Error in AJAX request');
+                callback(false);
+            }
+        });
+    }
+
     // ---------- validation functions ----------
 
     var username = $("#username")
@@ -105,24 +152,51 @@ $(document).ready(function () {
         }
     }
 
-    function validate_pfp(){
-        var fileInput = $("#pfp").val()
+    function validate_image() {
+        var fileInput = $('#pfp')[0];
+        var oldFileInput = $('#oldpfp').val();
+        var file = fileInput.files.length > 0 ? fileInput.files[0] : undefined;
 
-        if (!fileInput){
-            $("#photo_help").text("Profile photo is a required field").addClass("text-danger capitalize-text")
-            return false
+        if (file) {
+            var fileExtension = file.name.split('.').pop().toLowerCase();
+            var allowedExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+            if (allowedExtensions.includes(fileExtension)) {
+                $("#photo_help").text('').removeClass('text-danger capitalize-text');
+                return true;
+            } else {
+                $("#photo_help").text('Invalid file type. Please select a valid image.').addClass('text-danger capitalize-text');
+                return false;
+            }
         }
-        else{
-            $("#photo_help").text("").removeClass("text-danger capitalize-text")
-            return true
+        else if (oldFileInput) {
+            $("#photo_help").text('').removeClass('text-danger capitalize-text');
+            return true;
+        }
+        else {
+            $("#photo_help").text('Please upload a photo.').addClass('text-danger capitalize-text');
+            return false;
         }
     }
 
+
     $("#employeeForm").submit(function(e){
         e.preventDefault();
-        if (validate_email() & validate_password() & validate_username() & validate_pfp() ){
+        if (validate_email() & validate_password() & validate_username() & validate_image() ){
             if ($("#form-type").val()=='createform'){
-                addEmployee()
+                // Callback function to handle results
+                function handleResults(resultDuplicateUsername, resultDuplicateEmail) {
+                    console.log(resultDuplicateEmail, resultDuplicateUsername);
+
+                    if (resultDuplicateEmail && resultDuplicateUsername) {
+                        addEmployee();
+                    }
+                }
+                // calling ajax request
+                duplicate_username($("#username").val(),'employee', function (resultDuplicateUsername) {
+                    duplicate_email($("#email").val(),'employee', function (resultDuplicateEmail) {
+                        handleResults(resultDuplicateUsername, resultDuplicateEmail);
+                    });
+                });
             }
             else if ($("#form-type").val()=='updateform'){
                 updateEmployee()
