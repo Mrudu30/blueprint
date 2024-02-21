@@ -224,7 +224,7 @@ function updateFormSet(id,role){
             if (response[0][5]){
                 var imgPath = "/static/profiles/" + response[0][5]
                 $(".pfp").append(`<img src="${imgPath}" alt="profile picture" class="img-thumbnail ">`)
-                $("#oldpfp").val(response[0][5]);
+                $("#pfp").val(response[0][5]);
             }
         }
     });

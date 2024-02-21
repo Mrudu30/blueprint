@@ -28,6 +28,7 @@ $(document).ready(function(){
             "Cancel": function () {
                 $(this).dialog("close");
                 $(".pfp").empty()
+                $(".help").text("")
                 $("#employeeForm")[0].reset()
                 $(".help").text("")
             }
@@ -44,6 +45,53 @@ $(document).ready(function(){
         $(".hr").prop("disabled", false);
         $(".employee").prop("disabled", false);
     })
+
+    // --------------- Duplicate Functions -----------------
+    function duplicate_username(usernameValue, role, callback) {
+        $.ajax({
+            type: "POST",
+            url: "/checkUsername",
+            data: { 'username': usernameValue, 'role': role },
+            success: function (response) {
+                if (response.status === 'success') {
+                    username_help.text("").removeClass("text-danger capitalize-text");
+                    $("#username").addClass('duplicate');
+                    callback(true);
+                } else {
+                    username_help.text("username already exists").addClass("text-danger capitalize-text");
+                    $("#username").removeClass('duplicate');
+                    callback(false);
+                }
+            },
+            error: function () {
+                console.error('Error in AJAX request');
+                callback(false);
+            }
+        });
+    }
+
+    function duplicate_email(emailValue, role, callback) {
+        $.ajax({
+            type: "POST",
+            url: "/checkEmail",
+            data: { 'email': emailValue, 'role': role },
+            success: function (response) {
+                if (response.status === 'success') {
+                    email_help.text("").removeClass("text-danger capitalize-text");
+                    $("#email").addClass('duplicate');
+                    callback(true);
+                } else {
+                    email_help.text("email already exists").addClass("text-danger capitalize-text");
+                    $("#email").removeClass('duplicate');
+                    callback(false);
+                }
+            },
+            error: function () {
+                console.error('Error in AJAX request');
+                callback(false);
+            }
+        });
+    }
 
     // ----------- VALIDATION FUNCTIONS --------------
     var username = $("#username")
@@ -128,79 +176,64 @@ $(document).ready(function(){
             $("#role_help").text("").removeClass("text-danger capitalize-text");
             return true;
         }
+
     }
 
-    function validate_pfp(){
-        var fileInput = $("#pfp").val()
-        var oldFileInput = $("#oldpfp").val()
+    function validate_image() {
+        var fileInput = $('#pfp')[0];
+        var oldFileInput = $('#oldpfp').val();
+        var file = fileInput.files.length > 0 ? fileInput.files[0] : undefined;
 
-        if (!fileInput & !oldFileInput){
-            $("#photo_help").text("Profile photo is a required field").addClass("text-danger capitalize-text")
-            return false
-        }
-        else{
-            $("#photo_help").text("").removeClass("text-danger capitalize-text")
-            return true
-        }
-    }
-
-    function duplicate_username(usernameValue,role){
-        $.ajax({
-            type: "POST",
-            url: "/checkUsername",
-            data: {'username':usernameValue,'role':role},
-            success: function (response) {
-                if (response.status == 'success'){
-                    username_help.text("").removeClass("text-danger capitalize-text");
-                    $("#username").removeClass('is-duplicate')
-                }
-                else{
-                    username_help.text("username already exists").addClass("text-danger capitalize-text")
-                    $("#username").addClass('is-duplicate')
-                }
+        if (file) {
+            var fileExtension = file.name.split('.').pop().toLowerCase();
+            var allowedExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+            if (allowedExtensions.includes(fileExtension)) {
+                $("#photo_help").text('').removeClass('text-danger capitalize-text');
+                return true;
+            } else {
+                $("#photo_help").text('Invalid file type. Please select a valid image.').addClass('text-danger capitalize-text');
+                return false;
             }
-        });
+        }
+        else if (oldFileInput) {
+            $("#photo_help").text('').removeClass('text-danger capitalize-text');
+            return true;
+        }
+        else {
+            $("#photo_help").text('Please upload a photo.').addClass('text-danger capitalize-text');
+            return false;
+        }
     }
-
-    function duplicate_email(emailValue,role){
-        $.ajax({
-            type: "POST",
-            url: "/checkEmail",
-            data: {'email':emailValue,'role':role},
-            success: function (response) {
-                if (response.status == 'success'){
-                    email_help.text("").removeClass("text-danger capitalize-text");
-                    $("#email").removeClass('is-duplicate')
-                }
-                else{
-                    email_help.text("email already exists").addClass("text-danger capitalize-text")
-                    $("#email").addClass('is-duplicate')
-                }
-            }
-        });
-    }
-
-    var resultDuplicateUsername = $("#username").hasClass('is-duplicate')
-    var resultDuplicateEmail = $("#email").hasClass('is-duplicate')
 
     // form ajax
     $("#employeeForm").submit(function(e){
         e.preventDefault();
-        if (validate_email() & validate_password() & validate_role() & validate_username() & validate_pfp() ){
+        if (validate_email() & validate_password() & validate_role() & validate_username()  & validate_image() ){
             if ($("#form-type").val()=='createform'){
-                addEmployee()
+               // Callback function to handle results
+                function handleResults(resultDuplicateUsername, resultDuplicateEmail) {
+                    console.log(resultDuplicateEmail, resultDuplicateUsername);
+
+                    if (resultDuplicateEmail && resultDuplicateUsername) {
+                        addEmployee();
+                    }
+                }
+                // calling ajax request
+                duplicate_username($("#username").val(), $("input[name='role']:checked").val(), function (resultDuplicateUsername) {
+                    duplicate_email($("#email").val(), $("input[name='role']:checked").val(), function (resultDuplicateEmail) {
+                        handleResults(resultDuplicateUsername, resultDuplicateEmail);
+                    });
+                });
             }
             else if ($("#form-type").val()=='updateform'){
-                console.log($("#employeeForm").serialize())
                 updateEmployee()
             }
         }
         else{
             console.log("There was an error submitting the form")
+            console.log(validate_email() , validate_password() , validate_role() , validate_username()  , validate_image())
         }
     })
-
-
 })
 // ================ ADD / UPDATE EMPLOYEE ================
 function addEmployee(){
@@ -218,6 +251,7 @@ function addEmployee(){
                 $("#employeeForm")[0].reset()
                 $("#formdiv").dialog("close")
                 $(".pfp").empty()
+                $(".help").text("")
                 getAllEmployees()
                 $("#messages").text(response.message).addClass("bg-success capitalize-text")
                 setTimeout(() => {
@@ -229,6 +263,7 @@ function addEmployee(){
                 $("#employeeForm")[0].reset()
                 $("#formdiv").dialog("close")
                 $(".pfp").empty()
+                $(".help").text("")
                 $("#messages").show()
                 getAllEmployees()
                 $("#messages").text(response.message).addClass("bg-warning capitalize-text")
@@ -249,6 +284,33 @@ function updateFormSet(id,role){
         data: data,
         success: function (response) {
             // console.log(response)
+            $("#formdiv").dialog({
+                autoOpen: false,
+                title:'Update Employee',
+                show: {
+                    effect: "fold",
+                    duration: 1000
+                },
+                hide: {
+                    effect: "fold",
+                    duration: 1000
+                },
+                modal: true,
+                resizable: false,
+                width: 400,
+                buttons: {
+                    "Cancel": function () {
+                        $(this).dialog("close");
+                        $(".pfp").empty()
+                        $(".help").text("")
+                        $("#employeeForm")[0].reset()
+                        $(".help").text("")
+                    }
+                },
+                open: function (event, ui) {
+                    $(".ui-dialog-titlebar-close").hide();
+                }
+            })
             $("#formdiv").dialog("open")
             $("#form-type").val("updateform")
             $("#employeeId").val(response[0][0])
@@ -298,6 +360,10 @@ function updateEmployee(){
                 $("#employeeForm")[0].reset()
                 $("#formdiv").dialog("close")
                 $(".pfp").empty()
+                $(".help").text("")
+                $(".admin").prop("disabled", false);
+                $(".hr").prop("disabled", false);
+                $(".employee").prop("disabled", false);
                 getAllEmployees()
                 $("#messages").text(response.message).addClass("bg-success capitalize-text")
                 setTimeout(() => {
@@ -309,8 +375,12 @@ function updateEmployee(){
                 $("#employeeForm")[0].reset()
                 $("#formdiv").dialog("close")
                 $(".pfp").empty()
+                $(".help").text("")
                 $("#messages").show()
                 getAllEmployees()
+                $(".admin").prop("disabled", false);
+                $(".hr").prop("disabled", false);
+                $(".employee").prop("disabled", false);
                 $("#messages").text(response.message).addClass("bg-warning capitalize-text")
                 setTimeout(() => {
                     $("#messages").text("").removeClass("bg-warning capitalize-text")
