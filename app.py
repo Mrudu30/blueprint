@@ -22,7 +22,12 @@ app.register_blueprint(admin_bp)
 @app.route('/employee')
 @app.route("/")
 def login():
-    return render_template('login.html')
+    role = session.get('role',None)
+    if role:
+        context = {'homeurl':url_for(f"{role}.home")}
+        return render_template('wrong_page.html',**context)
+    else:
+        return render_template('login.html')
 
 # ---------- add employees ---------
 @app.route("/addEmployee",methods=['POST'])
@@ -72,6 +77,16 @@ def updateEmployee():
         return jsonify({'status':'success','message':f"{data['role']} updated successfully"})
     else:
         return jsonify({'status':'error','message':f"an error occured while updating {data['role']}"})
+
+# ---------- update status ----------
+@app.route("/updateStatus",methods=['POST'])
+def updateStatus():
+    data = request.form
+    # print(data)
+    if db.updateStatus(data):
+        return jsonify({'status':'success','message':'status updated'})
+    else:
+        return jsonify({'status':'error','message':'status not updated'})
 
 @app.route('/static/profiles/<filename>')
 def get_profile_photo(filename):

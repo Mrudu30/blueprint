@@ -10,13 +10,14 @@ def home():
     username = session.get('username', None)
     role = session.get('role',None)
     pfp = session.get('pfp',None)
-    print(pfp)
+    # print(pfp)
     if role:
         if role =='admin':
             context ={'username':username,'role':role,'pfp':pfp,'homeurl':url_for('admin.home')}
             return render_template('admin/dashboard.html',**context)
         else:
-            return render_template('wrong_page.html')
+            context ={'homeurl':url_for('admin.home')}
+            return render_template('wrong_page.html',**context)
     else:
         return render_template('login.html')
 

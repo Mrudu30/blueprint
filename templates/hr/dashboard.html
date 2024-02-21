@@ -7,9 +7,10 @@
 
     <!-- main page content -->
     <div>
+        <div class="text-center" id="messages" style="display: none;"></div>
         <!-- table to show employees -->
         <div id="employeeTable">
-            <table class="table table-striped table-inverse table-responsive" id="employeeTable1">
+            <table class="table table-striped table-inverse table-responsive table-hover" id="employeeTable1">
                 <thead class="thead-inverse">
                     <tr>
                         <th>ID</th>
@@ -17,6 +18,7 @@
                         <th>USERNAME</th>
                         <th>EMAIL</th>
                         <th>PASSWORD</th>
+                        <th>STATUS</th>
                         <th>ACTION</th>
                     </tr>
                 </thead>
@@ -58,6 +60,14 @@
                     <input type="file" class="form-control-file" name="pfp" id="pfp" placeholder="Profile Photo" aria-describedby="photo_help">
                     <input type="hidden" name="pfp" id="oldpfp">
                     <small id="photo_help" class="form-text help"></small>
+                </div>
+
+                <div class="mb-3">
+                    <div class="col-10 form-check form-switch">
+                        <input class="form-check-input statusSwitch" type="checkbox" role="switch" id="statusSwitch" name="statusSwitch">
+                        <input type="hidden" name="status" id="statusValue">
+                        <label class="form-check-label" for="statusSwitch">Status</label>
+                    </div>
                 </div>
 
                 <input type="submit" class="btn btn-outline-success d-block" value="Submit">

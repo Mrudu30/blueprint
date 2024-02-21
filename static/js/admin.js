@@ -205,9 +205,18 @@ $(document).ready(function(){
         }
     }
 
+    // --------- status value set ---------
+    function statusValue(){
+        var isChecked = $("#statusSwitch").prop("checked")
+        var stats = isChecked ? 'Active' : 'Inactive';
+
+        $("#statusValue").val(stats)
+    }
+
     // form ajax
     $("#employeeForm").submit(function(e){
         e.preventDefault();
+        statusValue()
         if (validate_email() & validate_password() & validate_role() & validate_username()  & validate_image() ){
             if ($("#form-type").val()=='createform'){
                // Callback function to handle results
@@ -235,6 +244,23 @@ $(document).ready(function(){
         }
     })
 })
+// ================ MESSAGE RENDER ==============
+function messageShow(response){
+    $("#messages").show()
+    if (response.status=="success"){
+        $("#messages").text(response.message).addClass("bg-success capitalize-text")
+        setTimeout(() => {
+            $("#messages").text("").removeClass("bg-success capitalize-text")
+        }, 3000);
+    }
+    else{
+        $("#messages").text(response.message).addClass("bg-warning capitalize-text")
+        setTimeout(() => {
+            $("#messages").text("").removeClass("bg-warning capitalize-text")
+        }, 3000)
+    }
+}
+
 // ================ ADD / UPDATE EMPLOYEE ================
 function addEmployee(){
     var formData = new FormData($("#employeeForm")[0])
@@ -245,32 +271,12 @@ function addEmployee(){
         contentType: false,
         processData: false,
         success: function (response) {
-            if (response.status == 'success'){
-                // console.log(formData)
-                $("#messages").show()
-                $("#employeeForm")[0].reset()
-                $("#formdiv").dialog("close")
-                $(".pfp").empty()
-                $(".help").text("")
-                getAllEmployees()
-                $("#messages").text(response.message).addClass("bg-success capitalize-text")
-                setTimeout(() => {
-                    $("#messages").text("").removeClass("bg-success capitalize-text")
-                }, 3000);
-            }
-            else{
-                // console.log(formData)
-                $("#employeeForm")[0].reset()
-                $("#formdiv").dialog("close")
-                $(".pfp").empty()
-                $(".help").text("")
-                $("#messages").show()
-                getAllEmployees()
-                $("#messages").text(response.message).addClass("bg-warning capitalize-text")
-                setTimeout(() => {
-                    $("#messages").text("").removeClass("bg-warning capitalize-text")
-                }, 3000);
-            }
+            $("#employeeForm")[0].reset()
+            $("#formdiv").dialog("close")
+            $(".pfp").empty()
+            $(".help").text("")
+            getAllEmployees()
+            messageShow(response)
         }
     });
 }
@@ -305,6 +311,9 @@ function updateFormSet(id,role){
                         $(".help").text("")
                         $("#employeeForm")[0].reset()
                         $(".help").text("")
+                        $(".employee").prop("disabled", false);
+                        $(".admin").prop("disabled", false);
+                        $(".hr").prop("disabled", false);
                     }
                 },
                 open: function (event, ui) {
@@ -332,10 +341,18 @@ function updateFormSet(id,role){
                 $(".hr").prop("disabled", true);
             }
 
-            if (response[0][5]){
-                var imgPath = "/static/profiles/" + response[0][5]
+            var isChecked = response[0][5] == 'Active' ? true:false
+            if(isChecked){
+                $('#statusSwitch').prop("checked",true)
+            }
+            else{
+                $('#statusSwitch').prop("checked",false)
+            }
+
+            if (response[0][6]){
+                var imgPath = "/static/profiles/" + response[0][6]
                 $(".pfp").append(`<img src="${imgPath}" alt="profile picture" class="img-thumbnail ">`)
-                $("#oldpfp").val(response[0][5]);
+                $("#oldpfp").val(response[0][6]);
             }
         },
         error: function(e){
@@ -354,38 +371,16 @@ function updateEmployee(){
         contentType: false,
         processData: false,
         success: function (response) {
-            if (response.status == 'success'){
-                // console.log(formData)
-                $("#messages").show()
-                $("#employeeForm")[0].reset()
-                $("#formdiv").dialog("close")
-                $(".pfp").empty()
-                $(".help").text("")
-                $(".admin").prop("disabled", false);
-                $(".hr").prop("disabled", false);
-                $(".employee").prop("disabled", false);
-                getAllEmployees()
-                $("#messages").text(response.message).addClass("bg-success capitalize-text")
-                setTimeout(() => {
-                    $("#messages").text("").removeClass("bg-success capitalize-text")
-                }, 3000);
-            }
-            else{
-                // console.log(formData)
-                $("#employeeForm")[0].reset()
-                $("#formdiv").dialog("close")
-                $(".pfp").empty()
-                $(".help").text("")
-                $("#messages").show()
-                getAllEmployees()
-                $(".admin").prop("disabled", false);
-                $(".hr").prop("disabled", false);
-                $(".employee").prop("disabled", false);
-                $("#messages").text(response.message).addClass("bg-warning capitalize-text")
-                setTimeout(() => {
-                    $("#messages").text("").removeClass("bg-warning capitalize-text")
-                }, 3000);
-            }
+            // console.log(formData)
+            $("#employeeForm")[0].reset()
+            $("#formdiv").dialog("close")
+            $(".pfp").empty()
+            $(".help").text("")
+            $(".admin").prop("disabled", false);
+            $(".hr").prop("disabled", false);
+            $(".employee").prop("disabled", false);
+            getAllEmployees()
+            messageShow(response)
         }
     });
 }
@@ -408,26 +403,28 @@ function deleteEmployee(id,role){
                 url: "/removeEmployee",
                 data: {'id':id,'role':role},
                 success: function (response) {
-                    if (response.status == 'success'){
-                        $("#messages").show()
-                        $("#messages").text(response.message).addClass("bg-success capitalize-text")
-                        setTimeout(() => {
-                            $("#messages").text("").removeClass("bg-success capitalize-text")
-                        }, 3000);
-                        getAllEmployees()
-                    }
-                    else{
-                        $("#messages").show()
-                        $("#messages").text(response.message).addClass("bg-warning capitalize-text")
-                        setTimeout(() => {
-                            $("#messages").text("").removeClass("bg-warning capitalize-text")
-                        }, 3000);
-                        getAllEmployees()
-                    }
+                    messageShow(response)
+                    getAllEmployees()
                 }
             });
         }
     }
+}
+
+// =============== STATUS UPDATE ============
+function statuschange(id,role){
+    var isChecked = $(`#statusSwitch_${id}`).prop('checked');
+    var stats = isChecked ? 'Active' : 'Inactive';
+    var data = {'id':id,'role':role,'status':stats}
+
+    $.ajax({
+        type: "POST",
+        url: "/updateStatus",
+        data: data,
+        success: function (response) {
+            messageShow(response)
+        }
+    });
 }
 
 // ================ LISTING FUNCTIONS ================
@@ -447,7 +444,9 @@ function getAllEmployees() {
             listingEmployees(response, role);
 
             // Reinitialize DataTable
-            $("#" + tableId).DataTable();
+            $("#" + tableId).DataTable({
+                order: [[0, 'desc']],
+            });
         },
         error:function(error){
             console.log(error)
@@ -467,6 +466,14 @@ function listingEmployees(response, tabId){
             td.text(employee[j])
             tr.append(td);
         }
+
+        var statusSwitch = employee[5] === 'Active' ? 'checked' : ''
+
+        tr.append($('<td>').html(`
+            <div class="mb-3 form-check form-switch text-left">
+                <input class="form-check-input" type="checkbox" role="switch" id="statusSwitch_${employee[0]}"  onchange="statuschange(${employee[0]},'${employee[1]}')" name="statusSwitch" ${statusSwitch}>
+            </div>
+        `));
 
         var action = $("<td>").html(`
             <div>

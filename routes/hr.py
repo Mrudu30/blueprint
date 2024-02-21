@@ -15,7 +15,8 @@ def home():
             context ={'username':username,'role':role,'pfp':pfp,'homeurl':url_for('hr.home')}
             return render_template('hr/dashboard.html',**context)
         else:
-            return render_template('wrong_page.html ')
+            context ={'homeurl':url_for('hr.home')}
+            return render_template('wrong_page.html ',**context)
     else:
         return render_template('login.html')
 

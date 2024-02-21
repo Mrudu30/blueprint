@@ -43,13 +43,13 @@ class Database:
 
         try:
             query = f"INSERT INTO"
-            values = (data['role'],data['username'],data['email'],data['password'],pfpname)
+            values = (data['role'],data['username'],data['email'],data['password'],data['status'],pfpname)
             if data['role'] == 'hr':
-                query += f" company_hr(role,username,email,password,profile) VALUES(%s,%s,%s,%s,%s)"
+                query += f" company_hr(role,username,email,password,status,profile) VALUES(%s,%s,%s,%s,%s,%s)"
             elif data['role'] == 'admin':
-                query += f" company(role,username,email,password,profile) VALUES(%s,%s,%s,%s,%s)"
+                query += f" company(role,username,email,password,status,profile) VALUES(%s,%s,%s,%s,%s,%s)"
             else:
-                query += f" company_employee(role,username,email,password,profile) VALUES(%s,%s,%s,%s,%s)"
+                query += f" company_employee(role,username,email,password,status,profile) VALUES(%s,%s,%s,%s,%s,%s)"
 
             cur.execute(query,values)
             conn.commit()
@@ -73,10 +73,34 @@ class Database:
             table = 'company_employee'
 
         try:
-            query = f"UPDATE {table} SET username=%s, email=%s, password=%s, profile=%s WHERE id=%s "
-            values = (data['username'],data['email'],data['password'],pfpname,data['id'])
+            query = f"UPDATE {table} SET username=%s, email=%s, password=%s, status=%s, profile=%s WHERE id=%s "
+            values = (data['username'],data['email'],data['password'],data['status'],pfpname,data['id'])
             # print(cur.mogrify(query,values))
             cur.execute(query,values)
+            conn.commit()
+            return True
+        except:
+            conn.rollback()
+            return False
+        finally:
+            conn.close()
+
+    # ----------- UPDATE STATUS -----------
+    def updateStatus(self,data):
+        conn = Database.connect(self)
+        cur = conn.cursor()
+
+        if data['role'] == 'admin':
+            table = 'company'
+        elif data['role'] == 'hr':
+            table = 'company_hr'
+        else:
+            table = 'company_employee'
+
+        try :
+            query = f"UPDATE {table} SET status='{data['status']}' WHERE id={data['id']}"
+            # print(query)
+            cur.execute(query)
             conn.commit()
             return True
         except:
@@ -123,7 +147,7 @@ class Database:
 
         try:
             query= f"SELECT * FROM {table} WHERE username='{username}'"
-            print(query)
+            # print(query)
             cur.execute(query)
             result = cur.fetchone()
             if result:
@@ -152,7 +176,7 @@ class Database:
 
         try:
             query= f"SELECT * FROM {table} WHERE email='{email}'"
-            print(query)
+            # print(query)
             cur.execute(query)
             result = cur.fetchone()
             if result:
@@ -183,19 +207,22 @@ class Authenticate:
             empInfo = cur.fetchone()
 
             if empInfo:
-                if (empInfo[4]==data['password']):
-                    session['id'] = empInfo[0]
-                    session['role'] = empInfo[1]
-                    session['username'] = empInfo[2]
-                    session['pfp'] = empInfo[5]
-                    if empInfo[1] == "admin":
-                        return {"success": True, "message": "", "redirect": url_for('admin.home')}
-                    elif empInfo[1] == "employee":
-                        return {"success": True, "message": "", "redirect": url_for('employee.home')}
-                    elif empInfo[1] == "hr":
-                        return {"success": True, "message": "", "redirect": url_for('hr.home')}
+                if (empInfo[5]=='Active'):
+                    if (empInfo[4]==data['password']):
+                        session['id'] = empInfo[0]
+                        session['role'] = empInfo[1]
+                        session['username'] = empInfo[2]
+                        session['pfp'] = empInfo[6]
+                        if empInfo[1] == "admin":
+                            return {"success": True, "message": "", "redirect": url_for('admin.home')}
+                        elif empInfo[1] == "employee":
+                            return {"success": True, "message": "", "redirect": url_for('employee.home')}
+                        elif empInfo[1] == "hr":
+                            return {"success": True, "message": "", "redirect": url_for('hr.home')}
+                    else:
+                        return {"success":False,"message":"Incorrect Password"}
                 else:
-                    return {"success":False,"message":"Incorrect Password"}
+                    return {"success":False,"message":f"{empInfo[1]} is inactive"}
             else:
                 return {"success":False,"message":"No Such Employee Found"}
         except:

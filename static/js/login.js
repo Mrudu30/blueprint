@@ -63,9 +63,9 @@ $(document).ready(function(){
                 success: function (response) {
                     console.log(response);
                     $('#messages').show();
-                    $("#messages").text(response.message).addClass('bg-warning text-center');
+                    $("#messages").text(response.message).addClass('bg-warning text-center capitalize-text');
                     setTimeout(() => {
-                        $("#messages").text('').removeClass('bg-warning text-center');
+                        $("#messages").text('').removeClass('bg-warning text-center capitalize-text');
                     }, 3000);
 
                     if (response.success) {
