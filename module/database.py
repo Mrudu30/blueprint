@@ -113,7 +113,13 @@ class Database:
 
         username = data['username']
         role = data['role']
-        table = "company_"+role
+
+        if role == "" or role == "admin":
+            table = 'company'
+        elif role == "employee":
+            table = "company_employee"
+        elif role == "hr":
+            table = "company_hr"
 
         try:
             query= f"SELECT * FROM {table} WHERE username='{username}'"
@@ -136,7 +142,13 @@ class Database:
 
         email = data['email']
         role = data['role']
-        table = "company_"+role
+
+        if role == "" or role == "admin":
+            table = 'company'
+        elif role == "employee":
+            table = "company_employee"
+        elif role == "hr":
+            table = "company_hr"
 
         try:
             query= f"SELECT * FROM {table} WHERE email='{email}'"

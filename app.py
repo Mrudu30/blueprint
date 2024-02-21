@@ -39,7 +39,7 @@ def addEmployee():
         pfp.save(os.path.join(app_dir, 'profiles', pfp.filename))
         pfpname = pfp.filename
     else:
-        pfpname = data['oldpfp']
+        pfpname = data['pfp']
     if db.addEmployee(data,pfpname):
         return jsonify({'status':'success','message':'employee added successfully'})
     else:
@@ -60,7 +60,7 @@ def updateEmployee():
         pfp.save(os.path.join(app_dir, 'profiles', pfp.filename))
         pfpname = pfp.filename
     else:
-        pfpname = data['oldpfp']
+        pfpname = data['pfp']
 
     if session['role'] == data['role'] and session['username'] == data['username'] :
         session['pfp']=pfpname
